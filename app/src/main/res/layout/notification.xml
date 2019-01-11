@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="120dp"
+    android:background="#4a4a4a">
+    <ImageView
+        android:id="@+id/noti_image"
+        android:scaleType="fitXY"
+        android:src="@drawable/round_disc"
+        android:layout_width="80dp"
+        android:layout_height="80dp" />
+    <ImageButton
+        android:id="@+id/noti_btn_cancel"
+        android:layout_alignParentRight="true"
+        android:background="#4a4a4a"
+        android:scaleType="fitXY"
+        android:src="@drawable/delete"
+        android:layout_width="15dp"
+        android:layout_height="15dp" />
+    <TextView
+        android:text="Name"
+        android:textSize="20dp"
+        android:id="@+id/noti_namesong"
+        android:layout_below="@id/noti_btn_cancel"
+        android:layout_toRightOf="@id/noti_image"
+
+        android:layout_width="match_parent"
+        android:layout_height="30dp" />
+    <RelativeLayout
+        android:layout_below="@id/noti_namesong"
+        android:layout_toRightOf="@id/noti_image"
+        android:id="@+id/noti_layout_button"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:gravity="center">
+        <ImageButton
+            android:src="@drawable/play2"
+            android:id="@+id/noti_bt_play"
+            android:background="#4a4a4a"
+            android:layout_width="55dp"
+            android:layout_height="55dp" />
+        <ImageButton
+            android:src="@drawable/next2"
+            android:layout_toRightOf="@id/noti_bt_play"
+            android:id="@+id/noti_bt_next"
+            android:background="#4a4a4a"
+            android:layout_width="55dp"
+            android:layout_height="55dp" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
