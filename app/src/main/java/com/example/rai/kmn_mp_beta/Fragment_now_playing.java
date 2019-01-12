@@ -73,6 +73,30 @@ public class Fragment_now_playing extends Fragment {
                 InitView();
             }
         });
+        btn_shuffle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((MainActivity) getActivity()).flag_rd == 1) {
+                    ((MainActivity) getActivity()).flag_rd = 0;
+                    btn_shuffle.setImageResource(R.drawable.btn_shuffle);
+                } else {
+                    ((MainActivity) getActivity()).flag_rd = 1;
+                    btn_shuffle.setImageResource(R.drawable.btn_shuffle_focused);
+                }
+            }
+        });
+        btn_repeat.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (((MainActivity) getActivity()).flag_loop == 1) {
+                    ((MainActivity) getActivity()).flag_loop = 0;
+                    btn_repeat.setImageResource(R.drawable.btn_repeat);
+                } else {
+                    ((MainActivity) getActivity()).flag_loop = 1;
+                    btn_repeat.setImageResource(R.drawable.btn_repeat_focused);
+                }
+            }
+        });
         sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean input) {
@@ -127,6 +151,8 @@ public class Fragment_now_playing extends Fragment {
         txt_duration_max=view.findViewById(R.id.songTotalDurationLabel);
         //circleImageView=view.findViewById(R.id.circle_disc);
         circleImageView=view.findViewById(R.id.round_disc);
+        btn_repeat = view.findViewById(R.id.btnRepeat);
+        btn_shuffle = view.findViewById(R.id.btnShuffle);
 
     }
 

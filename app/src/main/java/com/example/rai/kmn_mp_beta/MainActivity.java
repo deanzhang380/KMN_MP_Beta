@@ -58,8 +58,10 @@ import org.xml.sax.Parser;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -87,6 +89,10 @@ public class MainActivity extends AppCompatActivity
     int Total_duration=0;
     android.app.Fragment fragment= null;
     Intent svc;
+    public int flag_rd = 0;
+    public int flag_loop = 0;
+
+    HashMap<ArrayList<Music>, Integer> playlist = new HashMap<>();
 
     ImageView img;
     @Override
@@ -158,50 +164,7 @@ public class MainActivity extends AppCompatActivity
             }
         });
     }
-    public void GetMusic(){
-        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.disc);
 
-        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
-        String[] projection = new String[] {MediaStore.Audio.Albums._ID,
-                MediaStore.Audio.Albums.ALBUM_ART,
-                MediaStore.Audio.Albums.ALBUM,
-                MediaStore.Audio.Albums.ARTIST};
-        Cursor cursor = getContentResolver().query(uri,null, selection, null, null);
-        if (cursor != null) {
-            if (cursor.moveToFirst()) {
-                do {
-                    String name = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
-                    String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                    String url = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-                    Bitmap image;
-                    Music songs=null;
-
-                    try{
-                        if(coverpicture(url)!=null){
-                             songs= new Music(name,url,coverpicture(url),artist,getDurationFromFile(url));
-                        }
-                        else{
-                             songs= new Music(name,url,bm,artist,getDurationFromFile(url));
-                        }
-                    }catch (Exception e){
-                    }
-
-
-                    musicArrayList.add(songs);
-                } while (cursor.moveToNext());
-
-            }
-
-            cursor.close(); }
-    }
-    void doStuff(){
-        GetMusic();
-        adapter=new MusicListView(MainActivity.this,R.layout.music_item,musicArrayList);
-        lv.setAdapter(adapter);
-        lv.setCheeseList(musicArrayList);
-        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-    }
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         switch(requestCode){
@@ -221,37 +184,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
     }
-    public void PlayNhacMp3(String url, MediaPlayer mediaPlayer, String Song_name){
-        mediaPlayer.reset();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        try {
-            mediaPlayer.setDataSource(url);
-            mediaPlayer.prepareAsync();
-            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-                @Override
-                public void onPrepared(MediaPlayer mp) {
-                    mp.start();
-                   // Total_duration=mp.getDuration()/1000;
 
-                }
-            });
-            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-
-                @Override
-                public void onCompletion(MediaPlayer mp) {
-                    current_position+=1;
-                    PlayNhacMp3(musicArrayList.get(current_position).getPath(),mp,musicArrayList.get(current_position).getName());
-                    //Total_duration=mp.getDuration()/1000;
-                }
-            });
-            img.setImageBitmap(musicArrayList.get(current_position).getPicture());
-            txt_songname.setText(Song_name);
-            btn_play.setImageResource(R.drawable.pause2);
-            showNotification();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
     void Anhxa() {
         lv = findViewById(R.id.lv);
         txt_songname = findViewById(R.id.song_name);
@@ -261,11 +194,11 @@ public class MainActivity extends AppCompatActivity
         drawerLayout=findViewById(R.id.drawer_layout);
         img=findViewById(R.id.song_image);
     }
-    void NextSong(){
-        current_position+=1;
-        PlayNhacMp3(musicArrayList.get(current_position).getPath(),mediaPlayer,musicArrayList.get(current_position).getName());
-        //Total_duration=mediaPlayer.getDuration()/1000;
+
+    public static MainActivity getInstance() {
+        return instance;
     }
+
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -298,17 +231,30 @@ public class MainActivity extends AppCompatActivity
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        startService(svc);
+        myTTS.shutdown();
+
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        stopService(svc);
+    }
+
+
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
-        // Handle navigation view item clicks here.
-
         int id = item.getItemId();
         FragmentManager fragmentManager=getFragmentManager();
         if (id == R.id.nav_camera) {
             FragmentManager fm = getFragmentManager();
             fm.popBackStack();
-            // Handle the camera action
         } else if (id == R.id.nav_gallery) {
             fragment=new Fragment_now_playing();
             //fragment.setArguments(bundle);
@@ -328,12 +274,126 @@ public class MainActivity extends AppCompatActivity
     }
     String GetName(){return txt_songname.getText().toString();}
     int GetDuration(){return musicArrayList.get(current_position).getDuration()/1000;};
-    void setBundle(){
 
+    //Play Music
+    public void PlayNhacMp3(String url, MediaPlayer mediaPlayer, String Song_name) {
+        mediaPlayer.reset();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        try {
+            mediaPlayer.setDataSource(url);
+            mediaPlayer.prepareAsync();
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    mp.start();
+                    // Total_duration=mp.getDuration()/1000;
+
+                }
+            });
+            mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+
+                @Override
+                public void onCompletion(MediaPlayer mp) {
+                    current_position += 1;
+                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mp, musicArrayList.get(current_position).getName());
+                    //Total_duration=mp.getDuration()/1000;
+                }
+            });
+            img.setImageBitmap(musicArrayList.get(current_position).getPicture());
+            txt_songname.setText(Song_name);
+            btn_play.setImageResource(R.drawable.pause2);
+            showNotification();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    void NextSong() {
+        if (flag_rd == 0 && flag_loop == 0) {
+            current_position += 1;
+            PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            //Total_duration=mediaPlayer.getDuration()/1000;
+        } else {
+            if (flag_rd == 1 && flag_loop == 0) {
+                Random random = new Random();
+                current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            } else {
+                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            }
+        }
     }
     void PreSong(){
-        current_position-=1;
-        PlayNhacMp3(musicArrayList.get(current_position).getPath(),mediaPlayer,musicArrayList.get(current_position).getName());
+        if (flag_rd == 0 && flag_loop == 0) {
+            current_position -= 1;
+            PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            //Total_duration=mediaPlayer.getDuration()/1000;
+        } else {
+            if (flag_rd == 1 && flag_loop == 0) {
+                Random random = new Random();
+                current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            } else {
+                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+            }
+        }
+    }
+
+    public void MP_OnPause() {
+        if (mediaPlayer.isPlaying() == true) {
+            mediaPlayer.pause();
+            btn_play.setImageResource(R.drawable.play2);
+        } else {
+            mediaPlayer.start();
+            btn_play.setImageResource(R.drawable.pause2);
+        }
+    }
+
+    //Get List
+    public void GetMusic() {
+        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.disc);
+
+        Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        String selection = MediaStore.Audio.Media.IS_MUSIC + "!=0";
+        String[] projection = new String[]{MediaStore.Audio.Albums._ID,
+                MediaStore.Audio.Albums.ALBUM_ART,
+                MediaStore.Audio.Albums.ALBUM,
+                MediaStore.Audio.Albums.ARTIST};
+        Cursor cursor = getContentResolver().query(uri, null, selection, null, null);
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                do {
+                    String name = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+                    String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                    String url = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+                    Bitmap image;
+                    Music songs = null;
+
+                    try {
+                        if (coverpicture(url) != null) {
+                            songs = new Music(name, url, coverpicture(url), artist, getDurationFromFile(url));
+                        } else {
+                            songs = new Music(name, url, bm, artist, getDurationFromFile(url));
+                        }
+                    } catch (Exception e) {
+                    }
+
+
+                    musicArrayList.add(songs);
+                } while (cursor.moveToNext());
+
+            }
+
+            cursor.close();
+        }
+    }
+
+    void doStuff() {
+        GetMusic();
+        adapter = new MusicListView(MainActivity.this, R.layout.music_item, musicArrayList);
+        lv.setAdapter(adapter);
+        lv.setCheeseList(musicArrayList);
+        lv.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
     }
     public  Bitmap coverpicture(String path) {
 
@@ -349,7 +409,6 @@ public class MainActivity extends AppCompatActivity
             return  null;
 
     }
-
     public int getDurationFromFile(String path){
         MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
         metaRetriever.setDataSource(path);
@@ -360,25 +419,14 @@ public class MainActivity extends AppCompatActivity
         return musicArrayList.get(current_position).getPicture();
     }
 
+    //Notification
     public void showNotification(){
         new MyNotification(this,txt_songname.getText().toString(),musicArrayList.get(current_position).getPicture());
 
     }
-    public void MP_OnPause(){
-        if(mediaPlayer.isPlaying()==true){
-            mediaPlayer.pause();
-            btn_play.setImageResource(R.drawable.play2);
-        }
-        else{
-            mediaPlayer.start();
-            btn_play.setImageResource(R.drawable.pause2);
-        }
-    }
 
-    public static MainActivity getInstance() {
-        return instance;
-    }
 
+    //Voice control
     public void Recognize() {
         Intent intent =new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
@@ -439,24 +487,38 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    private void processResult(String s){
-        s=s.toLowerCase();
-        Toast.makeText(instance, s+"", Toast.LENGTH_SHORT).show();
-        if(s.indexOf("next")!=-1){
+    private void processResult(String s) {
+        s = s.toLowerCase();
+        Toast.makeText(instance, s + "", Toast.LENGTH_SHORT).show();
+        if (s.indexOf("next") != -1) {
             speak("Move to the next song.");
             NextSong();
         }
-        if(s.indexOf("pause")!=-1||s.indexOf("play")!=-1){
+        if (s.indexOf("previous") != -1) {
+            speak("Move to the previous song.");
+            PreSong();
+        }
+        if (s.indexOf("pause") != -1 || s.indexOf("play") != -1) {
             MP_OnPause();
-
         }
 
-        if(s.indexOf("open")!=-1){
-            int i=comparename(s);
-            if(i!=-1){
-            PlayNhacMp3(musicArrayList.get(i).getPath(),mediaPlayer,musicArrayList.get(i).getName());}
+        if (s.indexOf("open") != -1) {
+            int i = comparename(s);
+            if (i != -1) {
+                try {
+                    PlayNhacMp3(musicArrayList.get(i).getPath(), mediaPlayer, musicArrayList.get(i).getName());
+                } catch (Exception e) {
 
-
+                }
+            }
+        }
+        if (s.indexOf("random") != -1) {
+            flag_rd = 1;
+        } else if (s.indexOf("loop") != -1) {
+            flag_loop = 1;
+        } else if (s.indexOf("default") != -1) {
+            flag_rd = 0;
+            flag_loop = 0;
         }
     }
 
@@ -484,20 +546,6 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onPause() {
-        super.onPause();
-
-        startService(svc);
-        myTTS.shutdown();
-
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        stopService(svc);
-    }
 
     private int comparename(String s){
         int flag=0;
