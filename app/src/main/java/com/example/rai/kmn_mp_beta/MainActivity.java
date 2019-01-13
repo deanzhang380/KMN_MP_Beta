@@ -1,7 +1,9 @@
 package com.example.rai.kmn_mp_beta;
 
 import android.Manifest;
+import android.app.Fragment;
 import android.app.FragmentManager;
+import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -75,6 +77,8 @@ public class MainActivity extends AppCompatActivity
     private int notification_id;
     private TextToSpeech myTTS;
     private SpeechRecognizer mySpeechRecognizer;
+    public static String Youtube_API_Key = "AIzaSyDGtfNWT2DQZ1rL98CxT2mIO_eP_pasavI";
+    String IDPlayList = "";
 
     ArrayList<Music> musicArrayList;
     CustomMusicList    lv;
@@ -88,12 +92,15 @@ public class MainActivity extends AppCompatActivity
     MediaPlayer mediaPlayer,mp1;
     int Total_duration=0;
     android.app.Fragment fragment= null;
+    Fragment fragment2 = null;
     Intent svc;
     public int flag_rd = 0;
     public int flag_loop = 0;
+    int current_fragment = 0;
 
     HashMap<ArrayList<Music>, Integer> playlist = new HashMap<>();
-
+    //FragmentManager fragmentManager=getFragmentManager();
+    android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
     ImageView img;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -251,23 +258,46 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        FragmentManager fragmentManager=getFragmentManager();
+
         if (id == R.id.nav_camera) {
-            FragmentManager fm = getFragmentManager();
-            fm.popBackStack();
+            RemoveFragment();
         } else if (id == R.id.nav_gallery) {
-            fragment=new Fragment_now_playing();
-            //fragment.setArguments(bundle);
-            fragmentManager.beginTransaction().replace(R.id.main_view,fragment).addToBackStack("main").commit();
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
+            current_fragment = 1;
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Fragment_now_playing fragment_now_playing = new Fragment_now_playing();
+            fragmentTransaction.replace(R.id.main_view, fragment_now_playing, "fragment_now_playing");
+            fragmentTransaction.commit();
+        } else if (id == R.id.nav_playlist) {
+            current_fragment = 2;
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Fragment_Youtube fragment_youtube = new Fragment_Youtube();
+            fragmentTransaction.replace(R.id.main_view, fragment_youtube, "fragment_youtube");
+            fragmentTransaction.commit();
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void RemoveFragment() {
+        if (current_fragment == 1) {
+            Fragment_now_playing fragment_now_playing = (Fragment_now_playing) getSupportFragmentManager().findFragmentByTag("fragment_now_playing");
+            if (fragment_now_playing != null) {
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.remove(fragment_now_playing);
+                fragmentTransaction.commit();
+            } else {
+            }
+        }
+        if (current_fragment == 2) {
+            Fragment_Youtube fragment_youtube = (Fragment_Youtube) getSupportFragmentManager().findFragmentByTag("fragment_youtube");
+            if (fragment_youtube != null) {
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.remove(fragment_youtube);
+                fragmentTransaction.commit();
+            }
+        }
     }
     MediaPlayer GetMediaPlayer(){
         return mediaPlayer;

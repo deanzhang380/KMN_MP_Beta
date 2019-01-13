@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#4a4a4a">>
+
+    <EditText
+        android:layout_toLeftOf="@+id/buttonsearch"
+        android:id="@+id/edittextsearch"
+        android:hint="Nhập từ khóa tìm kiếm"
+        android:layout_margin="5dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="#FFFF" />
+
+    <Button
+        android:text="Search"
+        android:layout_margin="5dp"
+        android:id="@+id/buttonsearch"
+        android:layout_width="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_height="wrap_content" />
+
+    <ListView
+        android:layout_below="@+id/edittextsearch"
+        android:id="@+id/listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"></ListView>
+
+</RelativeLayout>

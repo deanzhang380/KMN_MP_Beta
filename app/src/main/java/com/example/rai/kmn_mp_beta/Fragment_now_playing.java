@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import de.hdodenhof.circleimageview.CircleImageView;
 
 
-public class Fragment_now_playing extends Fragment {
+public class Fragment_now_playing extends android.support.v4.app.Fragment {
     Handler han= new Handler();
     TextView txt_songname,txt_duration_max;
     ImageButton btn_play,btn_next,btn_pre,btn_shuffle,btn_repeat;
