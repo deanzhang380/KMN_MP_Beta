@@ -64,6 +64,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
             public void onClick(View v) {
                 ((MainActivity) getActivity()).NextSong();
                 InitView();
+                playCycle();
             }
         });
         btn_pre.setOnClickListener(new View.OnClickListener() {
@@ -71,6 +72,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
             public void onClick(View v) {
                 ((MainActivity) getActivity()).PreSong();
                 InitView();
+                playCycle();
             }
         });
         btn_shuffle.setOnClickListener(new View.OnClickListener() {
@@ -153,10 +155,20 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
         circleImageView=view.findViewById(R.id.round_disc);
         btn_repeat = view.findViewById(R.id.btnRepeat);
         btn_shuffle = view.findViewById(R.id.btnShuffle);
-
     }
 
     void InitView(){
+        if (((MainActivity) getActivity()).flag_rd == 1) {
+            btn_shuffle.setImageResource(R.drawable.btn_shuffle_focused);
+        } else {
+
+            btn_shuffle.setImageResource(R.drawable.btn_shuffle);
+        }
+        if (((MainActivity) getActivity()).flag_loop == 0) {
+            btn_repeat.setImageResource(R.drawable.btn_repeat);
+        } else {
+            btn_repeat.setImageResource(R.drawable.btn_repeat_focused);
+        }
         mp=((MainActivity)getActivity()).GetMediaPlayer();
         song_name=((MainActivity) getActivity()).GetName();
         Total_duration=((MainActivity) getActivity()).GetDuration();
