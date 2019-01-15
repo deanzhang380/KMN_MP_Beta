@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListView
+        android:id="@+id/playlist_detail_listview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#fFff"></ListView>
+
+    <RelativeLayout
+        android:id="@+id/song_bar2"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#645f5f"
+        android:layout_alignBottom="@+id/playlist_detail_listview">
+
+        <ImageView
+            android:id="@+id/song_image2"
+            android:layout_width="50dp"
+            android:layout_height="50dp" />
+
+        <TextView
+            android:id="@+id/song_name2"
+            android:layout_width="200dp"
+            android:layout_height="50dp"
+            android:layout_toRightOf="@+id/song_image2"
+            android:gravity="center|left"
+            android:text="Song Name"
+            android:textSize="20dp" />
+
+        <ImageButton
+            android:id="@+id/song_play2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toRightOf="@id/song_name2"
+            android:background="#645f5f"
+            android:src="@drawable/play2" />
+
+        <ImageButton
+            android:id="@+id/song_next2"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_toRightOf="@id/song_play2"
+            android:background="#645f5f"
+            android:src="@drawable/next2" />
+    </RelativeLayout>
+
+</RelativeLayout>

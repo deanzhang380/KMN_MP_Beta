@@ -10,6 +10,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -21,6 +22,7 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
@@ -37,6 +39,7 @@ import android.support.v4.media.session.MediaControllerCompat;
 
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.format.DateUtils;
+import android.view.ContextMenu;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -55,9 +58,14 @@ import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.xml.sax.Parser;
 
+import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -82,7 +90,7 @@ public class MainActivity extends AppCompatActivity
 
     ArrayList<Music> musicArrayList;
     CustomMusicList    lv;
-    MusicListView adapter;
+    public MusicListView adapter;
     TextView txt_songname;
     ImageButton btn_play,btn_next;
     int current_position=0;
@@ -96,11 +104,16 @@ public class MainActivity extends AppCompatActivity
     Intent svc;
     public int flag_rd = 0;
     public int flag_loop = 0;
-    int current_fragment = 0;
+    public int current_fragment = 0;
+    public ArrayList<Music> list_temp;
+    public int flag_playlist = 0;
 
-    HashMap<ArrayList<Music>, Integer> playlist = new HashMap<>();
+    public ArrayList<PlayList> list;
+    public TinyDB tinyDB;
+
+    //public PlayList playList=new PlayList(BitmapFactory.decodeResource(getResources(), R.drawable.disc),"AAA");
     //FragmentManager fragmentManager=getFragmentManager();
-    android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
+    public android.support.v4.app.FragmentManager fragmentManager = getSupportFragmentManager();
     ImageView img;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -114,7 +127,8 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-
+        tinyDB = new TinyDB(this);
+        list = tinyDB.getListObject("playlist");
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         Anhxa();
@@ -133,8 +147,6 @@ public class MainActivity extends AppCompatActivity
             }else{
                 ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},MY_Request_code);
             }
-
-
         }
         else{
             doStuff();
@@ -145,6 +157,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 // Toast.makeText(MainActivity.this,musicArrayList.get(position).getPath(), Toast.LENGTH_SHORT).show();
+                flag_playlist = 0;
                 current_position=position;
                 PlayNhacMp3(musicArrayList.get(position).getPath(),mediaPlayer,musicArrayList.get(position).getName());
 
@@ -170,7 +183,29 @@ public class MainActivity extends AppCompatActivity
                 return true;
             }
         });
+
+        //registerForContextMenu(lv);
     }
+
+   /* @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, v, menuInfo);
+        getMenuInflater().inflate(R.menu.menu_item_longclick,menu);
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        switch (item.getItemId()){
+            case R.id.menu_delete: {
+
+            }
+            case R.id.menu_ringtone:{
+
+            }
+        }
+        return super.onContextItemSelected(item);
+    }*/
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
@@ -218,19 +253,13 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         }
@@ -268,6 +297,14 @@ public class MainActivity extends AppCompatActivity
             fragmentTransaction.replace(R.id.main_view, fragment_now_playing, "fragment_now_playing");
             fragmentTransaction.commit();
         } else if (id == R.id.nav_playlist) {
+            current_fragment = 3;
+            android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            Fragment_Playlist fragment_playlist = new Fragment_Playlist();
+            fragmentTransaction.replace(R.id.main_view, fragment_playlist, "fragment_playlist");
+            fragmentTransaction.commit();
+
+
+        } else if (id == R.id.nav_youtube) {
             current_fragment = 2;
             android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
             Fragment_Youtube fragment_youtube = new Fragment_Youtube();
@@ -298,12 +335,38 @@ public class MainActivity extends AppCompatActivity
                 fragmentTransaction.commit();
             }
         }
+        if (current_fragment == 3) {
+            list = tinyDB.getListObject("playlist");
+            Fragment_Playlist fragment_playlist = (Fragment_Playlist) getSupportFragmentManager().findFragmentByTag("fragment_playlist");
+            if (fragment_playlist != null) {
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.remove(fragment_playlist);
+                fragmentTransaction.commit();
+            }
+        }
+        if (current_fragment == 4) {
+            Fragment_PlayList_detail fragment_playList_detail = (Fragment_PlayList_detail) getSupportFragmentManager().findFragmentByTag("fragment_playlist_detail");
+            if (fragment_playList_detail != null) {
+
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                fragmentTransaction.remove(fragment_playList_detail);
+                fragmentTransaction.commit();
+            }
+        }
     }
     MediaPlayer GetMediaPlayer(){
         return mediaPlayer;
     }
     String GetName(){return txt_songname.getText().toString();}
     int GetDuration(){return musicArrayList.get(current_position).getDuration()/1000;};
+
+    String GetPath() {
+        return musicArrayList.get(current_position).getPath();
+    }
+
+    String GetArtist() {
+        return musicArrayList.get(current_position).getArtist();
+    }
 
     //Play Music
     public void PlayNhacMp3(String url, MediaPlayer mediaPlayer, String Song_name) {
@@ -316,7 +379,6 @@ public class MainActivity extends AppCompatActivity
                 @Override
                 public void onPrepared(MediaPlayer mp) {
                     mp.start();
-                    // Total_duration=mp.getDuration()/1000;
 
                 }
             });
@@ -324,9 +386,7 @@ public class MainActivity extends AppCompatActivity
 
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-                    current_position += 1;
-                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mp, musicArrayList.get(current_position).getName());
-                    //Total_duration=mp.getDuration()/1000;
+                    NextSong();
                 }
             });
             img.setImageBitmap(musicArrayList.get(current_position).getPicture());
@@ -339,32 +399,62 @@ public class MainActivity extends AppCompatActivity
     }
 
     void NextSong() {
-        if (flag_rd == 0 && flag_loop == 0) {
-            current_position += 1;
-            PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
-            //Total_duration=mediaPlayer.getDuration()/1000;
-        } else {
-            if (flag_rd == 1 && flag_loop == 0) {
-                Random random = new Random();
-                current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+        if (flag_playlist == 0) {
+            if (flag_rd == 0 && flag_loop == 0) {
+                current_position += 1;
                 PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
             } else {
-                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                if (flag_rd == 1 && flag_loop == 0) {
+                    Random random = new Random();
+                    current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                } else {
+                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                }
+            }
+        }
+        if (flag_playlist == 1) {
+            if (flag_rd == 0 && flag_loop == 0) {
+                current_position += 1;
+                PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+            } else {
+                if (flag_rd == 1 && flag_loop == 0) {
+                    Random random = new Random();
+                    current_position = random.nextInt((list_temp.size() - 1) + 1);
+                    PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+                } else {
+                    PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+                }
             }
         }
     }
     void PreSong(){
-        if (flag_rd == 0 && flag_loop == 0) {
-            current_position -= 1;
-            PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
-            //Total_duration=mediaPlayer.getDuration()/1000;
-        } else {
-            if (flag_rd == 1 && flag_loop == 0) {
-                Random random = new Random();
-                current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+        if (flag_playlist == 0) {
+            if (flag_rd == 0 && flag_loop == 0) {
+                current_position -= 1;
                 PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
             } else {
-                PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                if (flag_rd == 1 && flag_loop == 0) {
+                    Random random = new Random();
+                    current_position = random.nextInt((musicArrayList.size() - 1) + 1);
+                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                } else {
+                    PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
+                }
+            }
+        }
+        if (flag_playlist == 1) {
+            if (flag_rd == 0 && flag_loop == 0) {
+                current_position -= 1;
+                PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+            } else {
+                if (flag_rd == 1 && flag_loop == 0) {
+                    Random random = new Random();
+                    current_position = random.nextInt((list_temp.size() - 1) + 1);
+                    PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+                } else {
+                    PlayNhacMp3(list_temp.get(current_position).getPath(), mediaPlayer, list_temp.get(current_position).getName());
+                }
             }
         }
     }
@@ -417,6 +507,7 @@ public class MainActivity extends AppCompatActivity
             cursor.close();
         }
     }
+
 
     void doStuff() {
         GetMusic();
@@ -592,5 +683,22 @@ public class MainActivity extends AppCompatActivity
         return -1;
     }
 
+    public void saveArrayList(ArrayList<PlayList> list, String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = prefs.edit();
+        Gson gson = new Gson();
+        String json = gson.toJson(list);
+        editor.putString(key, json);
+        editor.apply();     // This line is IMPORTANT !!!
+    }
+
+    public ArrayList<PlayList> getArrayList(String key) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        Gson gson = new Gson();
+        String json = prefs.getString(key, null);
+        Type type = new TypeToken<ArrayList<PlayList>>() {
+        }.getType();
+        return gson.fromJson(json, type);
+    }
 
 }

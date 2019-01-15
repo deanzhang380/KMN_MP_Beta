@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "com.example.rai.kmn_mp_beta"
-        minSdkVersion 25
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -35,4 +35,5 @@ dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.android.volley:volley:1.1.0'
+    implementation 'com.google.code.gson:gson:2.4'
 }

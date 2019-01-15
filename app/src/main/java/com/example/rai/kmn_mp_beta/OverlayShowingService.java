@@ -46,6 +46,7 @@ public class OverlayShowingService extends Service implements OnTouchListener, O
         overlayedButton = new ImageButton(this);
         overlayedButton.setImageResource(R.drawable.micro);
         overlayedButton.setScaleType(ImageView.ScaleType.FIT_XY);
+
         overlayedButton.setOnTouchListener(this);
         overlayedButton.setOnClickListener(this);
 
@@ -53,6 +54,9 @@ public class OverlayShowingService extends Service implements OnTouchListener, O
         params.gravity = Gravity.LEFT | Gravity.TOP;
         params.x = 0;
         params.y = 0;
+        params.width = 100;
+        params.height = 100;
+
         wm.addView(overlayedButton, params);
 
         topLeftView = new View(this);
@@ -63,7 +67,6 @@ public class OverlayShowingService extends Service implements OnTouchListener, O
         topLeftParams.width = 0;
         topLeftParams.height = 0;
         wm.addView(topLeftView, topLeftParams);
-
     }
 
     @Override
@@ -132,5 +135,4 @@ public class OverlayShowingService extends Service implements OnTouchListener, O
     public void onClick(View v) {
         main.Recognize();
     }
-
 }

@@ -1,7 +1,9 @@
 package com.example.rai.kmn_mp_beta;
 
+import android.app.Dialog;
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
@@ -10,8 +12,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.view.animation.Animation;
@@ -24,17 +29,20 @@ import de.hdodenhof.circleimageview.CircleImageView;
 public class Fragment_now_playing extends android.support.v4.app.Fragment {
     Handler han= new Handler();
     TextView txt_songname,txt_duration_max;
-    ImageButton btn_play,btn_next,btn_pre,btn_shuffle,btn_repeat;
+    ImageButton btn_play, btn_next, btn_pre, btn_shuffle, btn_repeat, btn_add;
     View view;
     MediaPlayer mp;
     SeekBar sb;
     ArrayList<Music> musiclist;
     int current;
-    String song_name;
+    String song_name, path;
     int Total_duration,flag_rp_sf=0;
     Runnable mr;
    // ImageView imageView;
     CircleImageView circleImageView;
+    ArrayList<String> list = new ArrayList<>();
+    MainActivity mainActivity;
+    ListView lv;
 
 
     @Nullable
@@ -42,6 +50,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         view =inflater.inflate(R.layout.now_playing,container,false);
+        mainActivity = MainActivity.getInstance();
         Anhxa();
         InitView();
         sb.setProgress(((MainActivity) getActivity()).GetMediaPlayer().getCurrentPosition()/1000);
@@ -63,6 +72,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
             @Override
             public void onClick(View v) {
                 ((MainActivity) getActivity()).NextSong();
+
                 InitView();
                 playCycle();
             }
@@ -97,6 +107,35 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
                     ((MainActivity) getActivity()).flag_loop = 1;
                     btn_repeat.setImageResource(R.drawable.btn_repeat_focused);
                 }
+            }
+        });
+        btn_add.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                for (int i = 0; i < mainActivity.list.size(); i++) {
+                    list.add(mainActivity.list.get(i).getName());
+                }
+                final Dialog dialog = new Dialog(getContext());
+                dialog.setContentView(R.layout.playlist_dialog);
+                dialog.setTitle("Choose Play List");
+                dialog.setCanceledOnTouchOutside(false);
+                lv = dialog.findViewById(R.id.lv_add);
+                ArrayAdapter arrayAdapter = new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, list);
+                lv.setAdapter(arrayAdapter);
+                lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        if (mainActivity.coverpicture(path) != null) {
+                            mainActivity.list.get(position).getMusic().add(new Music(mainActivity.GetName(), path, mainActivity.coverpicture(path), mainActivity.GetArtist(), mainActivity.getDurationFromFile(path)));
+                        } else {
+                            mainActivity.list.get(position).getMusic().add(new Music(mainActivity.GetName(), path, BitmapFactory.decodeResource(getResources(), R.drawable.disc)
+                                    , mainActivity.GetArtist(), mainActivity.getDurationFromFile(path)));
+                        }
+                        mainActivity.tinyDB.putListObject("playlist", mainActivity.list);
+                        dialog.cancel();
+                    }
+                });
+                dialog.show();
             }
         });
         sb.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -155,6 +194,8 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
         circleImageView=view.findViewById(R.id.round_disc);
         btn_repeat = view.findViewById(R.id.btnRepeat);
         btn_shuffle = view.findViewById(R.id.btnShuffle);
+        btn_add = view.findViewById(R.id.btnAddPlayList);
+
     }
 
     void InitView(){
@@ -169,6 +210,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
         } else {
             btn_repeat.setImageResource(R.drawable.btn_repeat_focused);
         }
+        path = mainActivity.GetPath();
         mp=((MainActivity)getActivity()).GetMediaPlayer();
         song_name=((MainActivity) getActivity()).GetName();
         Total_duration=((MainActivity) getActivity()).GetDuration();

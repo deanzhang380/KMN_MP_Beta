@@ -26,14 +26,15 @@
             android:textStyle="bold"
             android:text="SONG NAME"
             android:layout_marginTop="10dp"/>"
-
-        <!-- Playlist button -->
         <ImageButton
-            android:id="@+id/btnPlaylist"
+            android:id="@+id/btnAddPlayList"
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"
-            android:src="@drawable/btn_playlist"
+            android:src="@mipmap/ic_add2"
             android:background="@null"/>
+
+        <!-- Playlist button -->
+
     </LinearLayout>
 
     <LinearLayout

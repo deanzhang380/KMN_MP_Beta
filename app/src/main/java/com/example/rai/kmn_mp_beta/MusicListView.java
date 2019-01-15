@@ -82,6 +82,7 @@ public class MusicListView extends ArrayAdapter<Music> {
         vh.imgview.setImageBitmap(music.getPicture());
         vh.txtName.setText(music.getName());
         vh.txtArtist.setText(music.getArtist());
+
         return view;
     }
 }
