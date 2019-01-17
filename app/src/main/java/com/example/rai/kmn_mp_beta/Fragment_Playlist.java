@@ -44,7 +44,7 @@ public class Fragment_Playlist extends Fragment {
     EditText editText;
     Button btn_accept, btn_cancel;
     String name = "";
-    static ArrayList<PlayList> playListArrayList = new ArrayList<>();
+    static ArrayList<PlayList> playListArrayList;
     final ArrayList<Music> musicArrayList = new ArrayList<Music>();
 
     ArrayList<PlayList> lists;
@@ -57,12 +57,12 @@ public class Fragment_Playlist extends Fragment {
         mainActivity = MainActivity.getInstance();
         fragmentManager = mainActivity.fragmentManager;
         //TinyDB tinyDB= new TinyDB(getContext());
-        playListArrayList = mainActivity.tinyDB.getListObject("playlist");
-        if (playListArrayList == null) {
-            playListArrayList.add(new PlayList(BitmapFactory.decodeResource(getResources(), R.drawable.playlist), name, musicArrayList));
-        }
         anhxa();
         try {
+            playListArrayList = mainActivity.getArrayList("playlist");
+            if (playListArrayList == null) {
+                playListArrayList = new ArrayList<>();
+            }
             playListAdapter = new PlayListAdapter(getContext(), R.layout.dong_grid_playlist, playListArrayList);
             gridView.setAdapter(playListAdapter);
         } catch (Exception e) {
@@ -97,11 +97,10 @@ public class Fragment_Playlist extends Fragment {
                         String playlist_name = editText.getText().toString();
                         name = playlist_name;
                         playListArrayList.add(new PlayList(BitmapFactory.decodeResource(getResources(), R.drawable.playlist), name, musicArrayList));
-                        playListAdapter.notifyDataSetChanged();
-                        mainActivity.tinyDB.putListObject("playlist", playListArrayList);
+                        playListAdapter = new PlayListAdapter(getContext(), R.layout.dong_grid_playlist, playListArrayList);
+                        gridView.setAdapter(playListAdapter);
+                        mainActivity.saveArrayList(playListArrayList, ("playlist"));
                         dialog.cancel();
-
-
                     }
                 });
                 dialog.show();

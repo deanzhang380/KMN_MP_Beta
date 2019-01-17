@@ -78,16 +78,10 @@ public class MainActivity extends AppCompatActivity
     private static final int MY_Request_code=1;
     private static final int Record_Request_code=2;
     private static final int Alert_Request_code=3;
-    private static final int STATE_PAUSED = 0;
-    private static final int STATE_PLAYING = 1;
-    private int currentState;
     private static MainActivity instance;
-    private int notification_id;
     private TextToSpeech myTTS;
     private SpeechRecognizer mySpeechRecognizer;
     public static String Youtube_API_Key = "AIzaSyDGtfNWT2DQZ1rL98CxT2mIO_eP_pasavI";
-    String IDPlayList = "";
-
     ArrayList<Music> musicArrayList;
     CustomMusicList    lv;
     public MusicListView adapter;
@@ -97,11 +91,9 @@ public class MainActivity extends AppCompatActivity
     DrawerLayout drawerLayout;
     RelativeLayout song_bar_layout;
     Bundle bundle;
-    MediaPlayer mediaPlayer,mp1;
-    int Total_duration=0;
-    android.app.Fragment fragment= null;
-    Fragment fragment2 = null;
+    MediaPlayer mediaPlayer;
     Intent svc;
+
     public int flag_rd = 0;
     public int flag_loop = 0;
     public int current_fragment = 0;
@@ -127,8 +119,8 @@ public class MainActivity extends AppCompatActivity
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
-        tinyDB = new TinyDB(this);
-        list = tinyDB.getListObject("playlist");
+        /* tinyDB = new TinyDB(this);*/
+        list = getArrayList("playlist");
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         Anhxa();
@@ -179,10 +171,15 @@ public class MainActivity extends AppCompatActivity
         song_bar_layout.setOnLongClickListener(new View.OnLongClickListener() {
             @Override
             public boolean onLongClick(View v) {
-
+                current_fragment = 1;
+                android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+                Fragment_now_playing fragment_now_playing = new Fragment_now_playing();
+                fragmentTransaction.replace(R.id.main_view, fragment_now_playing, "fragment_now_playing");
+                fragmentTransaction.commit();
                 return true;
             }
         });
+
 
         //registerForContextMenu(lv);
     }
@@ -228,6 +225,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     void Anhxa() {
+
         lv = findViewById(R.id.lv);
         txt_songname = findViewById(R.id.song_name);
         btn_play = findViewById(R.id.song_play);
@@ -336,7 +334,7 @@ public class MainActivity extends AppCompatActivity
             }
         }
         if (current_fragment == 3) {
-            list = tinyDB.getListObject("playlist");
+            list = getArrayList("playlist");
             Fragment_Playlist fragment_playlist = (Fragment_Playlist) getSupportFragmentManager().findFragmentByTag("fragment_playlist");
             if (fragment_playlist != null) {
                 android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
@@ -402,6 +400,9 @@ public class MainActivity extends AppCompatActivity
         if (flag_playlist == 0) {
             if (flag_rd == 0 && flag_loop == 0) {
                 current_position += 1;
+                if (current_position > musicArrayList.size() - 1) {
+                    current_position = 0;
+                }
                 PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
             } else {
                 if (flag_rd == 1 && flag_loop == 0) {
@@ -432,6 +433,9 @@ public class MainActivity extends AppCompatActivity
         if (flag_playlist == 0) {
             if (flag_rd == 0 && flag_loop == 0) {
                 current_position -= 1;
+                if (current_position < 0) {
+                    current_position = musicArrayList.size() - 1;
+                }
                 PlayNhacMp3(musicArrayList.get(current_position).getPath(), mediaPlayer, musicArrayList.get(current_position).getName());
             } else {
                 if (flag_rd == 1 && flag_loop == 0) {
@@ -684,12 +688,27 @@ public class MainActivity extends AppCompatActivity
     }
 
     public void saveArrayList(ArrayList<PlayList> list, String key) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = prefs.edit();
         Gson gson = new Gson();
         String json = gson.toJson(list);
         editor.putString(key, json);
-        editor.apply();     // This line is IMPORTANT !!!
+        editor.apply();     // This line is IMPORTANT !!!*/
+        SharedPreferences settings;
+        SharedPreferences.Editor editor;
+        try {
+
+            settings = PreferenceManager.getDefaultSharedPreferences(this);
+            editor = settings.edit();
+
+            Gson gson = new Gson();
+            String json = gson.toJson(list);
+            editor.putString(key, json);
+            editor.commit();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public ArrayList<PlayList> getArrayList(String key) {

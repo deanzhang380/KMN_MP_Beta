@@ -131,7 +131,7 @@ public class Fragment_now_playing extends android.support.v4.app.Fragment {
                             mainActivity.list.get(position).getMusic().add(new Music(mainActivity.GetName(), path, BitmapFactory.decodeResource(getResources(), R.drawable.disc)
                                     , mainActivity.GetArtist(), mainActivity.getDurationFromFile(path)));
                         }
-                        mainActivity.tinyDB.putListObject("playlist", mainActivity.list);
+                        mainActivity.saveArrayList(mainActivity.list, "playlist");
                         dialog.cancel();
                     }
                 });
