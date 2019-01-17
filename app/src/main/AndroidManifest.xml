@@ -39,6 +39,7 @@
             android:configChanges="orientation|screenLayout|keyboardHidden"></activity>
         <service android:name=".OverlayShowingService"
             android:exported="false"/>
+
     </application>
 
 </manifest>

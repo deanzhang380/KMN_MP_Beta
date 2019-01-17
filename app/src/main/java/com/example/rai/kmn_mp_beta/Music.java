@@ -3,17 +3,16 @@ package com.example.rai.kmn_mp_beta;
 import android.graphics.Bitmap;
 
 public class Music {
+    private String name;
+    private String path;
+    private Bitmap picture;
+    private String Artist;
 
     public Music(String name, String path, Bitmap picture) {
         this.name = name;
         this.path = path;
         this.picture = picture;
     }
-
-    private String name;
-    private String path;
-    private Bitmap picture;
-    private String Artist;
 
     public int getDuration() {
         return Duration;

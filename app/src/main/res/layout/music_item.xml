@@ -11,25 +11,25 @@
         android:scaleType="fitCenter"/>
 
     <TextView
-        android:textColor="#04b3d2"
+        android:textColor="#000000"
         android:id="@+id/name"
         android:layout_width="wrap_content"
-        android:layout_height="30dp"
+        android:layout_height="50dp"
         android:layout_alignParentTop="true"
         android:layout_marginTop="18dp"
         android:layout_toRightOf="@id/img"
         android:gravity="center|left"
         android:text="Name"
-        android:textSize="25dp" />
+        android:textSize="40dp" />
     <TextView
-        android:textColor="#04b3d2"
+        android:textColor="#b8b9b9"
         android:id="@+id/artist"
         android:layout_width="wrap_content"
         android:layout_height="30dp"
         android:layout_toRightOf="@id/img"
         android:layout_below="@id/name"
         android:text="Artist"
-        android:textSize="25dp"
+        android:textSize="20dp"
         android:gravity="center|left"/>
 
 </RelativeLayout>

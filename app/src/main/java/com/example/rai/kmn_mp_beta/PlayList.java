@@ -9,7 +9,7 @@ import java.util.ArrayList;
 public class PlayList {
     private Bitmap image;
     private String name;
-
+    private ArrayList<Music> music = new ArrayList<Music>();
     public ArrayList<Music> getMusic() {
         return music;
     }
@@ -17,8 +17,6 @@ public class PlayList {
     public void setMusic(ArrayList<Music> music) {
         this.music = music;
     }
-
-    private ArrayList<Music> music = new ArrayList<Music>();
 
     public PlayList() {
     }
