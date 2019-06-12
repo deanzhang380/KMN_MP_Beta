@@ -59,9 +59,13 @@ public class Fragment_Playlist extends Fragment {
         //TinyDB tinyDB= new TinyDB(getContext());
         anhxa();
         try {
-            playListArrayList = mainActivity.getArrayList("playlist");
+            //playListArrayList = mainActivity.getArrayList("playlist");
+            playListArrayList = mainActivity.ReadDS();
             if (playListArrayList == null) {
                 playListArrayList = new ArrayList<>();
+            }
+            for (int i = 0; i < playListArrayList.size(); i++) {
+                playListArrayList.get(i).setImage(BitmapFactory.decodeResource(getResources(), R.drawable.playlist));
             }
             playListAdapter = new PlayListAdapter(getContext(), R.layout.dong_grid_playlist, playListArrayList);
             gridView.setAdapter(playListAdapter);
@@ -99,7 +103,8 @@ public class Fragment_Playlist extends Fragment {
                         playListArrayList.add(new PlayList(BitmapFactory.decodeResource(getResources(), R.drawable.playlist), name, musicArrayList));
                         playListAdapter = new PlayListAdapter(getContext(), R.layout.dong_grid_playlist, playListArrayList);
                         gridView.setAdapter(playListAdapter);
-                        mainActivity.saveArrayList(playListArrayList, ("playlist"));
+                        // mainActivity.saveArrayList(playListArrayList, ("playlist"));
+                        mainActivity.saveDS(playlist_name);
                         dialog.cancel();
                     }
                 });

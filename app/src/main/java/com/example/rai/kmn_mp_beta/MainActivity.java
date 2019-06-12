@@ -64,7 +64,11 @@ import com.google.gson.reflect.TypeToken;
 import org.xml.sax.Parser;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Date;
@@ -82,6 +86,7 @@ public class MainActivity extends AppCompatActivity
     private TextToSpeech myTTS;
     private SpeechRecognizer mySpeechRecognizer;
     public static String Youtube_API_Key = "AIzaSyDGtfNWT2DQZ1rL98CxT2mIO_eP_pasavI";
+    private static final String FILENAME_DS = "DanhSachPlayList.txt";
     ArrayList<Music> musicArrayList;
     CustomMusicList    lv;
     public MusicListView adapter;
@@ -120,7 +125,7 @@ public class MainActivity extends AppCompatActivity
         drawer.addDrawerListener(toggle);
         toggle.syncState();
         /* tinyDB = new TinyDB(this);*/
-        list = getArrayList("playlist");
+        //list = getArrayList("playlist");
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
         Anhxa();
@@ -129,7 +134,7 @@ public class MainActivity extends AppCompatActivity
         initializeTextToSpeech();
 
         svc = new Intent(this, OverlayShowingService.class);
-
+        list = ReadDS();
         initializeSpeechRecognize();
 
 
@@ -291,6 +296,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_gallery) {
             current_fragment = 1;
             android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            list = ReadDS();
             Fragment_now_playing fragment_now_playing = new Fragment_now_playing();
             fragmentTransaction.replace(R.id.main_view, fragment_now_playing, "fragment_now_playing");
             fragmentTransaction.commit();
@@ -322,6 +328,7 @@ public class MainActivity extends AppCompatActivity
                 android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.remove(fragment_now_playing);
                 fragmentTransaction.commit();
+
             } else {
             }
         }
@@ -334,12 +341,13 @@ public class MainActivity extends AppCompatActivity
             }
         }
         if (current_fragment == 3) {
-            list = getArrayList("playlist");
+            // list = getArrayList("playlist");
             Fragment_Playlist fragment_playlist = (Fragment_Playlist) getSupportFragmentManager().findFragmentByTag("fragment_playlist");
             if (fragment_playlist != null) {
                 android.support.v4.app.FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
                 fragmentTransaction.remove(fragment_playlist);
                 fragmentTransaction.commit();
+
             }
         }
         if (current_fragment == 4) {
@@ -540,6 +548,20 @@ public class MainActivity extends AppCompatActivity
         String duration = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
         return Integer.parseInt(duration);
     }
+
+    public String getNameFromFile(String path) {
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+        metaRetriever.setDataSource(path);
+        String name = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_TITLE);
+        return name;
+    }
+
+    public String getArtistFromFile(String path) {
+        MediaMetadataRetriever metaRetriever = new MediaMetadataRetriever();
+        metaRetriever.setDataSource(path);
+        String name = metaRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_ARTIST);
+        return name;
+    }
     public Bitmap GetMP3Image(){
         return musicArrayList.get(current_position).getPicture();
     }
@@ -687,37 +709,85 @@ public class MainActivity extends AppCompatActivity
         return -1;
     }
 
-    public void saveArrayList(ArrayList<PlayList> list, String key) {
-        /*SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        SharedPreferences.Editor editor = prefs.edit();
-        Gson gson = new Gson();
-        String json = gson.toJson(list);
-        editor.putString(key, json);
-        editor.apply();     // This line is IMPORTANT !!!*/
-        SharedPreferences settings;
-        SharedPreferences.Editor editor;
+    public void saveMusicList(String key, String Path) {
+
         try {
-
-            settings = PreferenceManager.getDefaultSharedPreferences(this);
-            editor = settings.edit();
-
-            Gson gson = new Gson();
-            String json = gson.toJson(list);
-            editor.putString(key, json);
-            editor.commit();
-
+            FileOutputStream fileOutputStream = openFileOutput(key, MODE_APPEND);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.write(Path + "\n");
+            outputStreamWriter.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public ArrayList<PlayList> getArrayList(String key) {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        Gson gson = new Gson();
-        String json = prefs.getString(key, null);
-        Type type = new TypeToken<ArrayList<PlayList>>() {
-        }.getType();
-        return gson.fromJson(json, type);
+    public void saveDS(String key) {
+        try {
+            FileOutputStream fileOutputStream = openFileOutput(FILENAME_DS, MODE_APPEND);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(fileOutputStream);
+            outputStreamWriter.write(key + "\n");
+            outputStreamWriter.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public ArrayList<PlayList> ReadDS() {
+        ArrayList<PlayList> list = new ArrayList<PlayList>();
+        try {
+            FileInputStream fileIn = openFileInput(FILENAME_DS);
+            InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+            char[] inputBuffer = new char[100000];
+            String s = "";
+            int charRead;
+            while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                // char to string conversion
+                String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                s += readstring;
+            }
+            String[] items = s.split("\n");
+
+            for (int i = 0; i < items.length; i++) {
+                list.add(new PlayList(items[i]));
+                list.get(i).setMusic(getList(list.get(i).getName()));
+            }
+
+        } catch (Exception e) {
+
+        }
+        return list;
+    }
+
+    public ArrayList<Music> getList(String FILENAME) {
+        ArrayList<Music> musicArrayList = new ArrayList<Music>();
+        try {
+            FileInputStream fileIn = openFileInput(FILENAME);
+            InputStreamReader InputRead = new InputStreamReader(fileIn);
+
+            char[] inputBuffer = new char[100000];
+            String s = "";
+            int charRead;
+
+            while ((charRead = InputRead.read(inputBuffer)) > 0) {
+                // char to string conversion
+                String readstring = String.copyValueOf(inputBuffer, 0, charRead);
+                s += readstring;
+            }
+
+            String[] items = s.split("\n");
+            List<String> list = new ArrayList<String>();
+            for (int i = 0; i < items.length; i++) {
+                list.add(items[i]);
+            }
+            for (int i = 0; i < list.size(); i++) {
+                Music songs = new Music(getNameFromFile(list.get(i)), list.get(i), coverpicture(list.get(i)), getArtistFromFile(list.get(i)), getDurationFromFile(list.get(i)));
+                musicArrayList.add(songs);
+            }
+        } catch (Exception e) {
+
+        }
+        return musicArrayList;
     }
 
 }

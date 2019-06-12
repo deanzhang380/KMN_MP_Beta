@@ -21,6 +21,9 @@ public class PlayList {
     public PlayList() {
     }
 
+    public PlayList(String n) {
+        this.name = n;
+    }
     public PlayList(Bitmap image, String name, ArrayList<Music> music) {
         this.image = image;
         this.name = name;

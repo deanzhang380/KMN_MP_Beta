@@ -73,6 +73,10 @@ public class Fragment_PlayList_detail extends Fragment {
         listView.setAdapter(musicListView);
     }
 
+    public void CreateList(String key) {
+
+    }
+
     public void init_songbar() {
         mainActivity.PlayNhacMp3(musicArrayList.get(current_position).getPath(), mainActivity.GetMediaPlayer(), musicArrayList.get(current_position).getName());
         imageView2.setImageBitmap(musicArrayList.get(current_position).getPicture());
